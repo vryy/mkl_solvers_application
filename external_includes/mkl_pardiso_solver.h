@@ -62,14 +62,6 @@ extern "C"
      MKL_INT *, double *, double *, MKL_INT *);
 }
 
-
-#include <boost/timer.hpp>
-
-#include "utilities/openmp_utils.h"
-
-#include "boost/smart_ptr.hpp"
-#include "includes/ublas_interface.h"
-
 #include <boost/numeric/bindings/traits/sparse_traits.hpp>
 #include <boost/numeric/bindings/traits/matrix_traits.hpp>
 #include <boost/numeric/bindings/traits/vector_traits.hpp>
@@ -79,6 +71,8 @@ extern "C"
 
 // Project includes
 #include "includes/define.h"
+#include "utilities/openmp_utils.h"
+#include "includes/ublas_interface.h"
 #include "linear_solvers/direct_solver.h"
 
 namespace ublas = boost::numeric::ublas;
@@ -92,7 +86,7 @@ class MKLPardisoSolver : public DirectSolver< TSparseSpaceType,
 {
 public:
     /**
-     * Counted pointer of SuperLUSolver
+     * Counted pointer of MKLPardisoSolver
      */
     KRATOS_CLASS_POINTER_DEFINITION( MKLPardisoSolver );
 
@@ -131,18 +125,18 @@ public:
             std::cout << "MKL Out-of-core is enable, adjusting MKL_PARDISO_OOC_MAX_CORE_SIZE to allocate memory for the internal array" << std::endl;
     }
 
-    virtual bool AdditionalPhysicalDataIsNeeded()
+    bool AdditionalPhysicalDataIsNeeded() final
     {
         return false;
     }
 
-    virtual void ProvideAdditionalData(
+    void ProvideAdditionalData(
         SparseMatrixType& rA,
         VectorType& rX,
         VectorType& rB,
         typename ModelPart::DofsArrayType& rdof_set,
         ModelPart& r_model_part
-    )
+    ) final
     {}
 
     /**
@@ -153,7 +147,7 @@ public:
      * @param rX. Solution vector.
      * @param rB. Right hand side vector.
      */
-    bool Solve(SparseMatrixType& rA, VectorType& rX, VectorType& rB)
+    bool Solve(SparseMatrixType& rA, VectorType& rX, VectorType& rB) final
     {
         double start_solver = OpenMPUtils::GetCurrentTime();
         typedef boost::numeric::bindings::traits::sparse_matrix_traits<SparseMatrixType> matraits;
@@ -352,7 +346,7 @@ public:
      * @param rX. Solution vector.
      * @param rB. Right hand side vector.
      */
-    bool Solve(SparseMatrixType& rA, DenseMatrixType& rX, DenseMatrixType& rB)
+    bool Solve(SparseMatrixType& rA, DenseMatrixType& rX, DenseMatrixType& rB) final
     {
         double start_solver = OpenMPUtils::GetCurrentTime();
         typedef boost::numeric::bindings::traits::sparse_matrix_traits<SparseMatrixType> matraits;
@@ -549,17 +543,23 @@ public:
 //        {
 //            std::copy(x + i * n, x + (i + 1) * n, column(rX, i).begin());
 //        }
-        
+
         noalias(rX) = trans(Xt);
-        
+
         std::cout << "#### SOLVER TIME: " << OpenMPUtils::GetCurrentTime()-start_solver << " ####" << std::endl;
         return true;
+    }
+
+    /// Turn back information as a string.
+    std::string Info() const final
+    {
+        return "PARDISO solver";
     }
 
     /**
      * Print information about this object.
      */
-    void  PrintInfo(std::ostream& rOStream) const
+    void PrintInfo(std::ostream& rOStream) const final
     {
         rOStream << "PARDISO solver finished.";
     }
@@ -567,7 +567,7 @@ public:
     /**
      * Print object's data.
      */
-    void  PrintData(std::ostream& rOStream) const
+    void PrintData(std::ostream& rOStream) const final
     {
     }
 
@@ -624,9 +624,9 @@ private:
     /**
      * Copy constructor.
      */
-//             ParallelSuperLUSolver(const ParallelSuperLUSolver& Other);
+//             MKLPardisoSolver(const MKLPardisoSolver& Other);
 
-}; // Class ParallelSuperLUSolver
+}; // Class MKLPardisoSolver
 
 
 /**
@@ -657,6 +657,4 @@ inline std::ostream& operator << (std::ostream& rOStream,
 
 }  // namespace Kratos.
 
-#endif // KRATOS_MKL_PARDISO_SOLVER_H_INCLUDED  defined 
-
-
+#endif // KRATOS_MKL_PARDISO_SOLVER_H_INCLUDED  defined
