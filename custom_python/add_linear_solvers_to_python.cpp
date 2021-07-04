@@ -24,6 +24,7 @@
 #include "linear_solvers/direct_solver.h"
 #include "linear_solvers/iterative_solver.h"
 #include "external_includes/mkl_pardiso_solver.h"
+#include "external_includes/mkl_repeated_pardiso_solver.h"
 #include "external_includes/mkl_gmres_solver.h"
 
 
@@ -40,6 +41,7 @@ void  AddLinearSolversToPython()
     typedef LinearSolver<SpaceType,  LocalSpaceType> LinearSolverType;
     typedef DirectSolver<SpaceType,  LocalSpaceType> DirectSolverType;
     typedef MKLPardisoSolver<SpaceType, LocalSpaceType> MKLPardisoSolverType;
+    typedef MKLRepeatedPardisoSolver<SpaceType, LocalSpaceType> MKLRepeatedPardisoSolverType;
     typedef MKLGMRESSolver<SpaceType, LocalSpaceType> MKLGMRESSolverType;
     typedef IterativeSolver<SpaceType, LocalSpaceType> IterativeSolverType;
     typedef Preconditioner<SpaceType,  LocalSpaceType> PreconditionerType;
@@ -70,6 +72,15 @@ void  AddLinearSolversToPython()
            .def("AdditionalPhysicalDataIsNeeded", &MKLPardisoSolverType::AdditionalPhysicalDataIsNeeded)
            .def("ProvideAdditionalData", &MKLPardisoSolverType::ProvideAdditionalData)
            .def("SetOutOfCore", &MKLPardisoSolverType::SetOutOfCore)
+           ;
+
+    class_<MKLRepeatedPardisoSolverType, MKLRepeatedPardisoSolverType::Pointer,
+           bases<DirectSolverType> >( "MKLRepeatedPardisoSolver" )
+           .def(init<unsigned int>() )
+           .def(self_ns::str(self))
+           .def("AdditionalPhysicalDataIsNeeded", &MKLRepeatedPardisoSolverType::AdditionalPhysicalDataIsNeeded)
+           .def("ProvideAdditionalData", &MKLRepeatedPardisoSolverType::ProvideAdditionalData)
+           .def("SetOutOfCore", &MKLRepeatedPardisoSolverType::SetOutOfCore)
            ;
 
 #ifdef _OPENMP
