@@ -1,7 +1,7 @@
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 message("**** configuring KratosMKLSolversApplication ****")
- 
+
 include_directories( ${CMAKE_SOURCE_DIR}/kratos )
 include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/external_includes )
 
@@ -37,12 +37,12 @@ message("mkl libs ${MKLSOLVER_LIBRARIES}")
 
 ##add definitions needed
 add_definitions(-DMKL_ILP64)
-		  
+
 ## generate variables with the sources
-set( KRATOS_MKL_SOLVERS_APPLICATION_SOURCES    
-	${CMAKE_CURRENT_SOURCE_DIR}/mkl_solvers_application.cpp 
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_linear_solvers_to_python.cpp 
-	${CMAKE_CURRENT_SOURCE_DIR}/custom_python/mkl_solvers_python_application.cpp 
+set( KRATOS_MKL_SOLVERS_APPLICATION_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/mkl_solvers_application.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/add_linear_solvers_to_python.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/mkl_solvers_python_application.cpp
 )
 
 
@@ -51,14 +51,14 @@ add_library(KratosMKLSolversApplication SHARED ${KRATOS_MKL_SOLVERS_APPLICATION_
 target_link_libraries(KratosMKLSolversApplication KratosCore ${MKLSOLVER_LIBRARIES} )
 set_target_properties(KratosMKLSolversApplication PROPERTIES PREFIX "")
 
-# changing the .dll suffix to .pyd 
+# changing the .dll suffix to .pyd
 if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-	set_target_properties(KratosMKLSolversApplication PROPERTIES SUFFIX .pyd)
+  set_target_properties(KratosMKLSolversApplication PROPERTIES SUFFIX .pyd)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
-# changing the .dylib suffix to .so 
+# changing the .dylib suffix to .so
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	set_target_properties(KratosMKLSolversApplication PROPERTIES SUFFIX .so)
+  set_target_properties(KratosMKLSolversApplication PROPERTIES SUFFIX .so)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 install(TARGETS KratosMKLSolversApplication DESTINATION libs )
@@ -71,4 +71,4 @@ endif(${INSTALL_PYTHON_FILES} MATCHES ON)
 # Add to the KratosMultiphisics Python module
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/MKLSolversApplication.py" DESTINATION KratosMultiphysics )
 
-
+message("**** finish configuring KratosMKLSolversApplication ****")
