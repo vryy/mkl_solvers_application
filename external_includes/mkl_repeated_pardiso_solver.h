@@ -110,6 +110,8 @@ public:
     {
         mRefinements = niter;
         mEnableOOC = false;
+        mNeedData = true;
+        mIsInitialized = false;
         miparm = new MKL_INT[64];
         mpt = new void*[64];
         mindex1_vector.resize(0);
@@ -121,6 +123,8 @@ public:
     {
         mRefinements = 0;
         mEnableOOC = false;
+        mNeedData = true;
+        mIsInitialized = false;
         miparm = new MKL_INT[64];
         mpt = new void*[64];
         mindex1_vector.resize(0);
@@ -144,9 +148,14 @@ public:
             std::cout << "MKL Out-of-core is enable, adjusting MKL_PARDISO_OOC_MAX_CORE_SIZE to allocate memory for the internal array" << std::endl;
     }
 
+    void SetAdditionalPhysicalData(const bool& NeedData)
+    {
+        mNeedData = NeedData;
+    }
+
     bool AdditionalPhysicalDataIsNeeded() final
     {
-        return true;
+        return mNeedData;
     }
 
     void ProvideAdditionalData(
@@ -169,7 +178,7 @@ public:
         assert (n == mbtraits::size1 (rX));
 
         // clean the data from previous solve if needed
-        if (mindex1_vector.size() > 0)
+        if (mIsInitialized)
             this->Clear();
 
         /**
@@ -289,6 +298,8 @@ public:
         }
         std::cout << "Factorization completed ... " << std::endl;
 
+        mIsInitialized = true;
+
         std::cout << "#### SOLVER PREPARATION TIME: " << OpenMPUtils::GetCurrentTime()-start_solver << " ####" << std::endl;
     }
 
@@ -379,21 +390,25 @@ public:
     {
         typedef boost::numeric::bindings::traits::sparse_matrix_traits<SparseMatrixType> matraits;
 
-        /* -------------------------------------------------------------------- */
-        /* .. Termination and release of memory.                                */
-        /* -------------------------------------------------------------------- */
-        MKL_INT phase = -1; /* Release internal memory. */
-        MKL_INT n = mindex1_vector.size()-1;
-        double ddum; /* Double dummy */
-        MKL_INT idum; /* Integer dummy. */
-        PARDISO (mpt, &mmaxfct, &mmnum, &mmtype, &phase,
-                 &n, &ddum, &mindex1_vector[0], &mindex2_vector[0], &idum, &mnrhs,
-                 miparm, &mmsglvl, &ddum, &ddum, &merror);
+        if (mIsInitialized)
+        {
+            /* -------------------------------------------------------------------- */
+            /* .. Termination and release of memory.                                */
+            /* -------------------------------------------------------------------- */
+            MKL_INT phase = -1; /* Release internal memory. */
+            MKL_INT n = mindex1_vector.size()-1;
+            double ddum; /* Double dummy */
+            MKL_INT idum; /* Integer dummy. */
+            PARDISO (mpt, &mmaxfct, &mmnum, &mmtype, &phase,
+                     &n, &ddum, &mindex1_vector[0], &mindex2_vector[0], &idum, &mnrhs,
+                     miparm, &mmsglvl, &ddum, &ddum, &merror);
 
-        mindex1_vector.resize(0);
-        mindex2_vector.resize(0);
+            mindex1_vector.resize(0);
+            mindex2_vector.resize(0);
 
-        std::cout << "#### MKL PARDISO SOLVER IS FREED ####" << std::endl;
+            mIsInitialized = false;
+            std::cout << "#### MKL PARDISO SOLVER IS FREED ####" << std::endl;
+        }
     }
 
     /// Turn back information as a string.
@@ -421,6 +436,8 @@ private:
 
     int mRefinements;
     bool mEnableOOC;
+    bool mNeedData;
+    bool mIsInitialized;
 
     double* ma;
     std::vector<MKL_INT> mindex1_vector;
