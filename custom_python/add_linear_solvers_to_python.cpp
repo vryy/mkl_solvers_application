@@ -72,6 +72,7 @@ void  AddLinearSolversToPython()
            .def("AdditionalPhysicalDataIsNeeded", &MKLPardisoSolverType::AdditionalPhysicalDataIsNeeded)
            .def("ProvideAdditionalData", &MKLPardisoSolverType::ProvideAdditionalData)
            .def("SetOutOfCore", &MKLPardisoSolverType::SetOutOfCore)
+           .def("SetNumThreads", &MKLPardisoSolverType::SetNumThreads)
            ;
 
     class_<MKLRepeatedPardisoSolverType, MKLRepeatedPardisoSolverType::Pointer,

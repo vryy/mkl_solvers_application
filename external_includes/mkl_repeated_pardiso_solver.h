@@ -49,18 +49,12 @@
 
 // External includes
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+
 #include <mkl_types.h>
-/* PARDISO prototype. */
-extern "C"
-{
-    extern MKL_INT PARDISO
-    (void *, MKL_INT *, MKL_INT *, MKL_INT *, MKL_INT *, MKL_INT *,
-     double *, MKL_INT *, MKL_INT *, MKL_INT *, MKL_INT *, MKL_INT *,
-     MKL_INT *, double *, double *, MKL_INT *);
-}
+#include <mkl_pardiso.h>
 
 #include <boost/numeric/bindings/traits/sparse_traits.hpp>
 #include <boost/numeric/bindings/traits/matrix_traits.hpp>
