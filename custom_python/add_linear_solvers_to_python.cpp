@@ -73,6 +73,8 @@ void  AddLinearSolversToPython()
            .def("ProvideAdditionalData", &MKLPardisoSolverType::ProvideAdditionalData)
            .def("SetOutOfCore", &MKLPardisoSolverType::SetOutOfCore)
            .def("SetNumThreads", &MKLPardisoSolverType::SetNumThreads)
+           .def("SetReordering", &MKLPardisoSolverType::SetReordering)
+           .def("SetMessageLevel", &MKLPardisoSolverType::SetMessageLevel)
            ;
 
     class_<MKLRepeatedPardisoSolverType, MKLRepeatedPardisoSolverType::Pointer,

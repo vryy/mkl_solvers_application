@@ -401,7 +401,7 @@ public:
             mindex2_vector.resize(0);
 
             mIsInitialized = false;
-            std::cout << "#### MKL PARDISO SOLVER IS FREED ####" << std::endl;
+            std::cout << "#### MKL (REPEATED) PARDISO SOLVER IS FREED ####" << std::endl;
         }
     }
 

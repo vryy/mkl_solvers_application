@@ -98,12 +98,14 @@ public:
      */
     MKLPardisoSolver(unsigned int niter)
     : mRefinements(niter), mEnableOOC(false), mNumThreads(0)
+    , mReordering(2), mMessageLevel(0)
     {
         PrintVersion();
     }
 
     MKLPardisoSolver()
     : mRefinements(0), mEnableOOC(false), mNumThreads(0)
+    , mReordering(2), mMessageLevel(0)
     {
         PrintVersion();
     }
@@ -123,6 +125,16 @@ public:
     void SetNumThreads(int num_threads)
     {
         mNumThreads = num_threads;
+    }
+
+    void SetReordering(int reordering)
+    {
+        mReordering = reordering;
+    }
+
+    void SetMessageLevel(int message_level)
+    {
+        mMessageLevel = message_level;
     }
 
     bool AdditionalPhysicalDataIsNeeded() final
@@ -220,7 +232,7 @@ public:
             iparm[i] = 0;
         }
         iparm[0] = 1; /* No solver default */
-        iparm[1] = 2; /* Fill-in reordering from METIS */
+        iparm[1] = mReordering;
         /* Numbers of processors, value of OMP_NUM_THREADS */
 //        iparm[2] = OpenMPUtils::GetNumThreads(); //omp_get_max_threads();
         iparm[2] = OpenMPUtils::GetNumThreads(); //omp_get_num_procs();
@@ -248,7 +260,7 @@ public:
         if(mEnableOOC) iparm[59] = 2; /* enable Out-of-core (to store the matrix in disk; can reduce the performance) */
         maxfct = 1; /* Maximum number of numerical factorizations. */
         mnum = 1; /* Which factorization to use. */
-        msglvl = 0; /* Print statistical information in file */
+        msglvl = mMessageLevel; /* Print statistical information in file */
         error = 0; /* Initialize error flag */
         /* -------------------------------------------------------------------- */
         /* .. Initialize the internal solver memory pointer. This is only */
@@ -270,9 +282,8 @@ public:
 
         if (error != 0)
         {
-            std::cout << "ERROR during symbolic factorization: " << error << std::endl;
-            ErrorCheck(error);
-            exit(1);
+            KRATOS_ERROR << "ERROR during symbolic factorization: " << error << std::endl
+                         << ErrorCheck(error);
         }
         std::cout << "Reordering completed ... " << std::endl;
         printf("  Number of perturbed pivots ...................... IPARM(14) : %d ~ %.2e\n", iparm[13], (double)iparm[13]);
@@ -294,9 +305,8 @@ public:
                  iparm, &msglvl, &ddum, &ddum, &error);
         if (error != 0)
         {
-            std::cout << "ERROR during numerical factorization: " << error << std::endl;
-            ErrorCheck(error);
-            exit(2);
+            KRATOS_ERROR << "ERROR during numerical factorization: " << error << std::endl
+                         << ErrorCheck(error);
         }
         std::cout << "Factorization completed ... " << std::endl;
 
@@ -314,9 +324,8 @@ public:
                  iparm, &msglvl, b, x, &error);
         if (error != 0)
         {
-            std::cout << "ERROR during solution: " << error << std::endl;
-            ErrorCheck(error);
-            exit(3);
+            KRATOS_ERROR << "ERROR during solution: " << error << std::endl
+                         << ErrorCheck(error);
         }
 
         /* -------------------------------------------------------------------- */
@@ -429,7 +438,7 @@ public:
             iparm[i] = 0;
         }
         iparm[0] = 1; /* No solver default */
-        iparm[1] = 2; /* Fill-in reordering from METIS */
+        iparm[1] = mReordering;
         /* Numbers of processors, value of OMP_NUM_THREADS */
         iparm[2] = OpenMPUtils::GetNumThreads(); //omp_get_max_threads();
 //        iparm[2] = OpenMPUtils::GetNumProcs(); //omp_get_num_procs();
@@ -457,7 +466,7 @@ public:
         if(mEnableOOC) iparm[59] = 2; /* enable Out-of-core (to store the matrix in disk; can reduce the performance) */
         maxfct = 1; /* Maximum number of numerical factorizations. */
         mnum = 1; /* Which factorization to use. */
-        msglvl = 0; /* Print statistical information in file */
+        msglvl = mMessageLevel; /* Print statistical information in file */
         error = 0; /* Initialize error flag */
 
         /* -------------------------------------------------------------------- */
@@ -480,9 +489,8 @@ public:
 
         if (error != 0)
         {
-            std::cout << "ERROR during symbolic factorization: " << error << std::endl;
-            ErrorCheck(error);
-            exit(1);
+            KRATOS_ERROR << "ERROR during symbolic factorization: " << error << std::endl
+                         << ErrorCheck(error);
         }
 
         std::cout << "Reordering completed ... " << std::endl;
@@ -498,9 +506,8 @@ public:
                  iparm, &msglvl, &ddum, &ddum, &error);
         if (error != 0)
         {
-            std::cout << "ERROR during numerical factorization: " << error << std::endl;
-            ErrorCheck(error);
-            exit(2);
+            KRATOS_ERROR << "ERROR during numerical factorization: " << error << std::endl
+                         << ErrorCheck(error);
         }
         std::cout << "Factorization completed ... " << std::endl;
 
@@ -518,9 +525,8 @@ public:
                  iparm, &msglvl, b, x, &error);
         if (error != 0)
         {
-            std::cout << "ERROR during solution: " << error << std::endl;
-            ErrorCheck(error);
-            exit(3);
+            KRATOS_ERROR << "ERROR during solution: " << error << std::endl
+                         << ErrorCheck(error);
         }
 
         /* -------------------------------------------------------------------- */
@@ -575,44 +581,41 @@ private:
     int mRefinements;
     bool mEnableOOC;
     int mNumThreads; // this variable is used to override the environment setting OMP_NUM_THREADS, but use exclusively for this solver
+    int mReordering; // reordering method for iparm[1]
+                        /* 0: minimum degree algorithm */
+                        /* 2: Fill-in reordering from METIS */
+                        /* 3: Fill-in reordering from METIS 5.1 */
+                        /* 4: minimum degree algorithm from AMD */
+    int mMessageLevel;  // statistical information; 0: no output, 1: output
 
-    void ErrorCheck(MKL_INT error) const
+    std::string ErrorCheck(MKL_INT error) const
     {
         switch(error)
         {
             case -1:
-                std::cout << "Input inconsistent" << std::endl;
-                break;
+                return "Input inconsistent";
             case -2:
-                std::cout << "Not enough memory" << std::endl;
-                break;
+                return "Not enough memory";
             case -3:
-                std::cout << "Reordering problem" << std::endl;
-                break;
+                return "Reordering problem";
             case -4:
-                std::cout << "Zero pivot, numerical factorization or iterative refinement problem" << std::endl;
-                break;
+                return "Zero pivot, numerical factorization or iterative refinement problem";
             case -5:
-                std::cout << "Unclassified (internal) error" << std::endl;
-                break;
+                return "Unclassified (internal) error";
             case -6:
-                std::cout << "Reordering failed (matrix types 11, 13 only)" << std::endl;
-                break;
+                return "Reordering failed (matrix types 11, 13 only)";
             case -7:
-                std::cout << "Diagonal matrix problem" << std::endl;
-                break;
+                return "Diagonal matrix problem";
             case -8:
-                std::cout << "32-bit integer overflow problem" << std::endl;
-                break;
+                return "32-bit integer overflow problem";
             case -9:
-                std::cout << "Not enough memory for OOC" << std::endl;
-                break;
+                return "Not enough memory for OOC";
             case -10:
-                std::cout << "Problems with opening OOC temporary files" << std::endl;
-                break;
+                return "Problems with opening OOC temporary files";
             case -11:
-                std::cout << "Read/write problems with the OOC data file" << std::endl;
-                break;
+                return "Read/write problems with the OOC data file";
+            default:
+                return "Unknown";
         }
     }
 
@@ -621,7 +624,7 @@ private:
         printf("================================================================\n");
         MKLVersion Version;
         mkl_get_version(&Version);
-        printf("MKLPardisoSolver is created, Version info:\n");
+        printf("MKLPardisoSolver is created, MKL Version info:\n");
         printf("-- Major version:           %d\n", Version.MajorVersion);
         printf("-- Minor version:           %d\n", Version.MinorVersion);
         printf("-- Update version:          %d\n", Version.UpdateVersion);
