@@ -53,7 +53,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <mkl_types.h>
-#include <boost/timer.hpp>
 #include "utilities/openmp_utils.h"
 
 #include "boost/smart_ptr.hpp"
