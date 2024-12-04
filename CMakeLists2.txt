@@ -48,10 +48,10 @@ set( KRATOS_MKL_SOLVERS_APPLICATION_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/custom_python/mkl_solvers_python_application.cpp
 )
 
-
 # ###############################################################
 add_library(KratosMKLSolversApplication SHARED ${KRATOS_MKL_SOLVERS_APPLICATION_SOURCES})
 target_link_libraries(KratosMKLSolversApplication KratosCore ${MKLSOLVER_LIBRARIES} )
+set_target_properties(KratosMKLSolversApplication PROPERTIES COMPILE_DEFINITIONS "MKL_SOLVERS_APPLICATION=EXPORT,API")
 set_target_properties(KratosMKLSolversApplication PROPERTIES PREFIX "")
 
 # changing the .dll suffix to .pyd
@@ -73,4 +73,3 @@ endif(${INSTALL_PYTHON_FILES} MATCHES ON)
 
 # Add to the KratosMultiphisics Python module
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/MKLSolversApplication.py" DESTINATION KratosMultiphysics )
-

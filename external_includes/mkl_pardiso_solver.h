@@ -168,8 +168,8 @@ public:
 
         MKL_INT n = matraits::size1 (rA);
         assert (n == matraits::size2 (rA));
-        assert (n == mbtraits::size1 (rB));
-        assert (n == mbtraits::size1 (rX));
+        assert (n == mbtraits::size (rB));
+        assert (n == mbtraits::size (rX));
 
         // set new number of threads if needed
         int old_num_threads = OpenMPUtils::GetNumThreads();
@@ -298,7 +298,6 @@ public:
         /* -------------------------------------------------------------------- */
         /* .. Numerical factorization. */
         /* -------------------------------------------------------------------- */
-        KRATOS_WATCH(iparm[63]);
         phase = 22;
         PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
                  &n, a, index1_vector, index2_vector, &idum, &nrhs,

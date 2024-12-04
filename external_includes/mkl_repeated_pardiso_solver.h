@@ -168,8 +168,8 @@ public:
 
         MKL_INT n = matraits::size1 (rA);
         assert (n == matraits::size2 (rA));
-        assert (n == mbtraits::size1 (rB));
-        assert (n == mbtraits::size1 (rX));
+        assert (n == mbtraits::size (rB));
+        assert (n == mbtraits::size (rX));
 
         // clean the data from previous solve if needed
         if (mIsInitialized)

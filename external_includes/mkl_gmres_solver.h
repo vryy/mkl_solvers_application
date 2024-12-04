@@ -124,8 +124,8 @@ public:
 
         MKL_INT n = matraits::size1 (rA);
         assert (n == matraits::size2 (rA));
-        assert (n == mbtraits::size1 (rB));
-        assert (n == mbtraits::size1 (rX));
+        assert (n == mbtraits::size (rB));
+        assert (n == mbtraits::size (rX));
 
         /**
          * nonzeros in rA
@@ -179,15 +179,15 @@ public:
         //---------------------------------------------------------------------------
         MKL_INT ipar[128];
         MKL_INT size_tmp = fmin(n,150);
-        double tmp[((2*size_tmp+1)*n+size_tmp*size_tmp+9)/2 + 1];
+        std::vector<double> tmp(((2*size_tmp+1)*n+size_tmp*size_tmp+9)/2 + 1);
         double dpar[128];
-        double expected_solution[n];
+        std::vector<double> expected_solution(n);
         for( int i=0; i<n; i++ )
             expected_solution[i] = b[i];
 //                         std::cout << "expected solution generated" << std::endl;
-        double rhs[n];
-        double computed_solution[n];
-        double residual[n];
+        std::vector<double> rhs(n);
+        std::vector<double> computed_solution(n);
+        std::vector<double> residual(n);
         //---------------------------------------------------------------------------
         // Some additional variables to use with the RCI (P)FGMRES solver
         //---------------------------------------------------------------------------*/
@@ -222,7 +222,7 @@ public:
         // Save the right-hand side in vector rhs for future use
         //---------------------------------------------------------------------------*/
         i=1;
-        dcopy(&ivar, b, &i, rhs, &i);
+        dcopy(&ivar, b, &i, rhs.data(), &i);
         //---------------------------------------------------------------------------
         // Initialize the initial guess
         //---------------------------------------------------------------------------*/
@@ -234,7 +234,7 @@ public:
         // Initialize the solver
         //---------------------------------------------------------------------------*/
 //                         std::cout << "initializing the solver...";
-        dfgmres_init(&ivar, computed_solution, b, &RCI_request, ipar, dpar, tmp);
+        dfgmres_init(&ivar, computed_solution.data(), b, &RCI_request, ipar, dpar, tmp.data());
 //                         std::cout << " done. Exit with " << RCI_request << std::endl;
         if (RCI_request!=0) Error( RCI_request );
         //---------------------------------------------------------------------------
@@ -256,7 +256,7 @@ public:
 //                         * Check the correctness and consistency of the newly set parameters
 //                         *---------------------------------------------------------------------------*/
 //                         std::cout << "checking consistency...";
-        dfgmres_check(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp);
+        dfgmres_check(&ivar, computed_solution.data(), rhs.data(), &RCI_request, ipar, dpar, tmp.data());
 //                         std::cout << " done. Exit with " << RCI_request << std::endl;
         if (RCI_request!=0) Error( RCI_request );
 
@@ -325,7 +325,7 @@ public:
 //                         std::cout << std::endl;
 
 ONE:
-        dfgmres(&ivar, computed_solution, b, &RCI_request, ipar, dpar, tmp);
+        dfgmres(&ivar, computed_solution.data(), b, &RCI_request, ipar, dpar, tmp.data());
 //                         std::cout << " done. Exit with " << RCI_request << std::endl;
 
 //                         std::cout << "after:" << std::endl;
@@ -389,14 +389,14 @@ ONE:
 //                            /* exploit this option with care */
             ipar[12]=1;
             /* Get the current FGMRES solution in the vector b[N] */
-            dfgmres_get(&ivar, computed_solution, b, &RCI_request, ipar, dpar, tmp, &itercount);
+            dfgmres_get(&ivar, computed_solution.data(), b, &RCI_request, ipar, dpar, tmp.data(), &itercount);
             /* Compute the current true residual via MKL (Sparse) BLAS routines */
 //                             std::cout << "computing residual...";
-            mkl_dcsrgemv(&cvar, &ivar, a, index1_vector, index2_vector, b, residual);
+            mkl_dcsrgemv(&cvar, &ivar, a, index1_vector, index2_vector, b, residual.data());
             dvar=-1.0E0;
             i=1;
-            daxpy(&ivar, &dvar, rhs, &i, residual, &i);
-            dvar=dnrm2(&ivar,residual,&i);
+            daxpy(&ivar, &dvar, rhs.data(), &i, residual.data(), &i);
+            dvar=dnrm2(&ivar, residual.data(), &i);
             std::cout << " done. dvar = " << dvar << std::endl;
             if (dvar<1.0E-3) goto COMPLETE;
             else
@@ -483,7 +483,7 @@ ONE:
 COMPLETE:
         ipar[12]=0;
         std::cout << "completing...";
-        dfgmres_get(&ivar, computed_solution, rhs, &RCI_request, ipar, dpar, tmp, &itercount);
+        dfgmres_get(&ivar, computed_solution.data(), rhs.data(), &RCI_request, ipar, dpar, tmp.data(), &itercount);
         std::cout << "done." << std::endl;
 //                        /*---------------------------------------------------------------------------
 //                        /* Print solution vector: computed_solution[N] and the number of iterations: itercount
@@ -518,11 +518,8 @@ SUCCEDED:
 //                         delete [] ipar;
         delete [] index1_vector;
         delete [] index2_vector;
-//                         delete [] computed_solution;
-//                         delete [] rhs;
         std::cout << "======= EXITING GMRES SOLVER ========" << std::endl;
         return true;
-
     }
 
     void Error( int error_code )
