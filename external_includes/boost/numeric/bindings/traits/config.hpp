@@ -20,11 +20,15 @@
 // Microsoft Visual C++
 #if defined (BOOST_MSVC)
 // .. version 6.0 & 7.0
-#  if BOOST_MSVC <= 1300
-#    define BOOST_NUMERIC_BINDINGS_POOR_MANS_TRAITS
-#  endif
+#if BOOST_MSVC <= 1300
+#define BOOST_NUMERIC_BINDINGS_POOR_MANS_TRAITS
+#endif
 
 #elif defined(__ICC)
+
+#elif defined(__INTEL_COMPILER)
+
+#elif defined(__INTEL_LLVM_COMPILER)
 
 #elif defined(__IBMCPP__)
 
@@ -37,7 +41,7 @@
 #elif defined(__sgi)
 
 #else
-#error bindings do not recognise compiler
+#error bindings do not recognize compiler
 #endif
  
 
@@ -52,4 +56,3 @@
 #endif 
 
 #endif
-
