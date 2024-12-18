@@ -45,17 +45,19 @@
 #if !defined(KRATOS_MKL_PARDISO_SOLVER_H_INCLUDED )
 #define  KRATOS_MKL_PARDISO_SOLVER_H_INCLUDED
 
-// #define BOOST_NUMERIC_BINDINGS_SUPERLU_PRINT
-
-// External includes
+// System includes
 
 #include <cstdio>
 #include <cstdlib>
 #include <cmath>
 
+// External includes
+
 #include <mkl_types.h>
 #include <mkl_service.h>
 #include <mkl_pardiso.h> // provides definition for PARDISO function
+
+// Project includes
 
 #include <boost/numeric/bindings/traits/sparse_traits.hpp>
 #include <boost/numeric/bindings/traits/matrix_traits.hpp>
@@ -64,7 +66,6 @@
 #include <boost/numeric/bindings/traits/ublas_sparse.hpp>
 #include <boost/numeric/bindings/traits/ublas_vector.hpp>
 
-// Project includes
 #include "includes/define.h"
 #include "utilities/openmp_utils.h"
 #include "includes/ublas_interface.h"
