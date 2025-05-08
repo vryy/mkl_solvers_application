@@ -38,7 +38,8 @@ BOOST_PYTHON_MODULE(KratosMKLSolversApplication)
            ;
 
     AddLinearSolversToPython();
-
+    AddComplexLinearSolversToPython();
+    AddGComplexLinearSolversToPython();
 
 }
 

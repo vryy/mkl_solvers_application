@@ -67,18 +67,30 @@
 #include <boost/numeric/bindings/traits/ublas_vector.hpp>
 
 #include "includes/define.h"
-#include "utilities/openmp_utils.h"
 #include "includes/ublas_interface.h"
 #include "linear_solvers/direct_solver.h"
+#include "utilities/openmp_utils.h"
 
 namespace ublas = boost::numeric::ublas;
 
 namespace Kratos
 {
+
+template<typename TDataType>
+struct MKLPardisoHelper
+{
+    static constexpr int GetMatType()
+    {
+        KRATOS_ERROR << "Unknown data type " << typeid(TDataType).name();
+        return 0;
+    }
+};
+
 template< class TSparseSpaceType, class TDenseSpaceType,
+          class TModelPartType,
           class TReordererType = Reorderer<TSparseSpaceType, TDenseSpaceType> >
 class MKLPardisoSolver : public DirectSolver< TSparseSpaceType,
-    TDenseSpaceType, TReordererType>
+    TDenseSpaceType, TModelPartType, TReordererType>
 {
 public:
     /**
@@ -86,7 +98,7 @@ public:
      */
     KRATOS_CLASS_POINTER_DEFINITION( MKLPardisoSolver );
 
-    typedef LinearSolver<TSparseSpaceType, TDenseSpaceType, TReordererType> BaseType;
+    typedef DirectSolver<TSparseSpaceType, TDenseSpaceType, TModelPartType, TReordererType> BaseType;
 
     typedef typename TSparseSpaceType::MatrixType SparseMatrixType;
 
@@ -94,18 +106,24 @@ public:
 
     typedef typename TDenseSpaceType::MatrixType DenseMatrixType;
 
+    typedef typename BaseType::DataType DataType;
+
+    typedef typename BaseType::ModelPartType ModelPartType;
+
     /**
      * @param niter number of iterative refinements allowed
      */
     MKLPardisoSolver(unsigned int niter)
-    : mRefinements(niter), mEnableOOC(false), mNumThreads(0)
+    : BaseType()
+    , mRefinements(niter), mEnableOOC(false), mNumThreads(0)
     , mReordering(2), mMessageLevel(0)
     {
         PrintVersion();
     }
 
     MKLPardisoSolver()
-    : mRefinements(0), mEnableOOC(false), mNumThreads(0)
+    : BaseType()
+    , mRefinements(0), mEnableOOC(false), mNumThreads(0)
     , mReordering(2), mMessageLevel(0)
     {
         PrintVersion();
@@ -114,7 +132,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~MKLPardisoSolver() {}
+    ~MKLPardisoSolver() override {}
 
     void SetOutOfCore(bool OOC)
     {
@@ -147,8 +165,8 @@ public:
         SparseMatrixType& rA,
         VectorType& rX,
         VectorType& rB,
-        typename ModelPart::DofsArrayType& rdof_set,
-        ModelPart& r_model_part
+        typename ModelPartType::DofsArrayType& rdof_set,
+        ModelPartType& r_model_part
     ) final
     {}
 
@@ -180,13 +198,13 @@ public:
         /**
          * nonzeros in rA
          */
-        double* a = matraits::value_storage(rA);
+        DataType* a = matraits::value_storage(rA);
 
         /**
          * manual index vector generation
          */
-        MKL_INT *index1_vector = new (std::nothrow) MKL_INT[rA.index1_data().size()];
-        MKL_INT *index2_vector = new (std::nothrow) MKL_INT[rA.index2_data().size()];
+        std::vector<MKL_INT> index1_vector(rA.index1_data().size());
+        std::vector<MKL_INT> index2_vector(rA.index2_data().size());
         std::cout << "Size of the problem: " << n << std::endl;
         std::cout << "Size of index1_vector: " << rA.index1_data().size() << std::endl;
         std::cout << "Size of index2_vector: " << rA.index2_data().size() << std::endl;
@@ -207,10 +225,10 @@ public:
          * 11   real and nonsymmetric
          * 13   complex and nonsymmetric
          */
-        MKL_INT mtype = 11;
+        MKL_INT mtype = static_cast<MKL_INT>(MKLPardisoHelper<DataType>::GetMatType());
         /* RHS and solution vectors. */
-        double *b = mbtraits::storage(rB);
-        double *x = mbtraits::storage(rX);
+        DataType *b = mbtraits::storage(rB);
+        DataType *x = mbtraits::storage(rX);
 
         MKL_INT nrhs = 1; /* Number of right hand sides. */
         /* Internal solver memory pointer pt, */
@@ -222,7 +240,7 @@ public:
         MKL_INT maxfct, mnum, phase, error, msglvl;
         /* Auxiliary variables. */
         MKL_INT i;
-        double ddum; /* Double dummy */
+        DataType ddum; /* Double dummy */
         MKL_INT idum; /* Integer dummy. */
 
         /* -------------------------------------------------------------------- */
@@ -278,7 +296,7 @@ public:
         /* -------------------------------------------------------------------- */
         phase = 11;
         PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
-                 &n, a, index1_vector, index2_vector, &idum, &nrhs,
+                 &n, a, index1_vector.data(), index2_vector.data(), &idum, &nrhs,
                  iparm, &msglvl, &ddum, &ddum, &error);
 
         if (error != 0)
@@ -301,7 +319,7 @@ public:
         /* -------------------------------------------------------------------- */
         phase = 22;
         PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
-                 &n, a, index1_vector, index2_vector, &idum, &nrhs,
+                 &n, a, index1_vector.data(), index2_vector.data(), &idum, &nrhs,
                  iparm, &msglvl, &ddum, &ddum, &error);
         if (error != 0)
         {
@@ -320,7 +338,7 @@ public:
         //    b[i] = 1;
         //}
         PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
-                 &n, a, index1_vector, index2_vector, &idum, &nrhs,
+                 &n, a, index1_vector.data(), index2_vector.data(), &idum, &nrhs,
                  iparm, &msglvl, b, x, &error);
         if (error != 0)
         {
@@ -333,10 +351,8 @@ public:
         /* -------------------------------------------------------------------- */
         phase = -1; /* Release internal memory. */
         PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
-                 &n, &ddum, index1_vector, index2_vector, &idum, &nrhs,
+                 &n, &ddum, index1_vector.data(), index2_vector.data(), &idum, &nrhs,
                  iparm, &msglvl, &ddum, &ddum, &error);
-        delete [] index1_vector;
-        delete [] index2_vector;
 
         // restore the original number of threads
         if (mNumThreads > 0)
@@ -374,13 +390,13 @@ public:
         /**
          * nonzeros in rA
          */
-        double* a = matraits::value_storage(rA);
+        DataType* a = matraits::value_storage(rA);
 
         /**
          * manual index vector generation
          */
-        MKL_INT *index1_vector = new (std::nothrow) MKL_INT[rA.index1_data().size()];
-        MKL_INT *index2_vector = new (std::nothrow) MKL_INT[rA.index2_data().size()];
+        std::vector<MKL_INT> index1_vector(rA.index1_data().size());
+        std::vector<MKL_INT> index2_vector(rA.index2_data().size());
         std::cout << "Size of the problem: " << n << std::endl;
         std::cout << "Size of index1_vector: " << rA.index1_data().size() << std::endl;
         std::cout << "Size of index2_vector: " << rA.index2_data().size() << std::endl;
@@ -401,18 +417,18 @@ public:
          * 11   real and nonsymmetric
          * 13   complex and nonsymmetric
          */
-        MKL_INT mtype = 11;
+        MKL_INT mtype = static_cast<MKL_INT>(MKLPardisoHelper<DataType>::GetMatType());
         MKL_INT nrhs = mbtraits::size2(rB); /* Number of right hand sides. */
 
         /* RHS and solution vectors. */
         DenseMatrixType Bt = trans(rB);
         DenseMatrixType Xt = ZeroMatrix(nrhs, n);
-        double *b = mbtraits::storage(Bt);
-        double *x = mbtraits::storage(Xt);
+        DataType *b = mbtraits::storage(Bt);
+        DataType *x = mbtraits::storage(Xt);
 
         // inefficient copy
-//        double b[nrhs * n];
-//        double x[nrhs * n];
+//        DataType b[nrhs * n];
+//        DataType x[nrhs * n];
 //        for(int i = 0; i < nrhs; ++i)
 //        {
 //            std::copy(column(rB, i).begin(), column(rB, i).end(), b + i * n);
@@ -427,7 +443,7 @@ public:
         MKL_INT maxfct, mnum, phase, error, msglvl;
         /* Auxiliary variables. */
         MKL_INT i;
-        double ddum; /* Double dummy */
+        DataType ddum; /* Double dummy */
         MKL_INT idum; /* Integer dummy. */
 
         /* -------------------------------------------------------------------- */
@@ -484,7 +500,7 @@ public:
         /* -------------------------------------------------------------------- */
         phase = 11;
         PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
-                 &n, a, index1_vector, index2_vector, &idum, &nrhs,
+                 &n, a, index1_vector.data(), index2_vector.data(), &idum, &nrhs,
                  iparm, &msglvl, &ddum, &ddum, &error);
 
         if (error != 0)
@@ -502,7 +518,7 @@ public:
         KRATOS_WATCH(iparm[63]);
         phase = 22;
         PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
-                 &n, a, index1_vector, index2_vector, &idum, &nrhs,
+                 &n, a, index1_vector.data(), index2_vector.data(), &idum, &nrhs,
                  iparm, &msglvl, &ddum, &ddum, &error);
         if (error != 0)
         {
@@ -521,7 +537,7 @@ public:
         //    b[i] = 1;
         //}
         PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
-                 &n, a, index1_vector, index2_vector, &idum, &nrhs,
+                 &n, a, index1_vector.data(), index2_vector.data(), &idum, &nrhs,
                  iparm, &msglvl, b, x, &error);
         if (error != 0)
         {
@@ -534,10 +550,8 @@ public:
         /* -------------------------------------------------------------------- */
         phase = -1; /* Release internal memory. */
         PARDISO (pt, &maxfct, &mnum, &mtype, &phase,
-                 &n, &ddum, index1_vector, index2_vector, &idum, &nrhs,
+                 &n, &ddum, index1_vector.data(), index2_vector.data(), &idum, &nrhs,
                  iparm, &msglvl, &ddum, &ddum, &error);
-        delete [] index1_vector;
-        delete [] index2_vector;
 
         // inefficient copy
 //        for(int i = 0; i < nrhs; ++i)
@@ -558,7 +572,9 @@ public:
     /// Turn back information as a string.
     std::string Info() const final
     {
-        return "PARDISO solver";
+        std::stringstream buffer;
+        buffer << "MKLPardisoSolver<" << DataTypeToString<DataType>::Get() << ">";
+        return buffer.str();
     }
 
     /**
@@ -624,7 +640,7 @@ private:
         printf("================================================================\n");
         MKLVersion Version;
         mkl_get_version(&Version);
-        printf("MKLPardisoSolver is created, MKL Version info:\n");
+        printf("%s is created, MKL Version info:\n", Info().c_str());
         printf("-- Major version:           %d\n", Version.MajorVersion);
         printf("-- Minor version:           %d\n", Version.MinorVersion);
         printf("-- Update version:          %d\n", Version.UpdateVersion);
@@ -647,32 +663,23 @@ private:
 
 }; // Class MKLPardisoSolver
 
-
-/**
- * input stream function
- */
-template<class TSparseSpaceType, class TDenseSpaceType,class TReordererType>
-inline std::istream& operator >> (std::istream& rIStream, MKLPardisoSolver< TSparseSpaceType,
-                                  TDenseSpaceType, TReordererType>& rThis)
+template<>
+struct MKLPardisoHelper<KRATOS_DOUBLE_TYPE>
 {
-    return rIStream;
-}
+    static constexpr int GetMatType()
+    {
+        return 11;
+    }
+};
 
-/**
- * output stream function
- */
-template<class TSparseSpaceType, class TDenseSpaceType, class TReordererType>
-inline std::ostream& operator << (std::ostream& rOStream,
-                                  const MKLPardisoSolver<TSparseSpaceType,
-                                  TDenseSpaceType, TReordererType>& rThis)
+template<>
+struct MKLPardisoHelper<KRATOS_COMPLEX_TYPE>
 {
-    rThis.PrintInfo(rOStream);
-    rOStream << std::endl;
-    rThis.PrintData(rOStream);
-
-    return rOStream;
-}
-
+    static constexpr int GetMatType()
+    {
+        return 13;
+    }
+};
 
 }  // namespace Kratos.
 

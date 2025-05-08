@@ -65,9 +65,10 @@
 
 // Project includes
 #include "includes/define.h"
-#include "utilities/openmp_utils.h"
 #include "includes/ublas_interface.h"
+#include "includes/model_part.h"
 #include "linear_solvers/direct_solver.h"
+#include "utilities/openmp_utils.h"
 
 namespace ublas = boost::numeric::ublas;
 
@@ -78,9 +79,10 @@ namespace Kratos
  * PARDISO solver for initial stiffness strategy
  */
 template< class TSparseSpaceType, class TDenseSpaceType,
+          class TModelPartType,
           class TReordererType = Reorderer<TSparseSpaceType, TDenseSpaceType> >
 class MKLRepeatedPardisoSolver : public DirectSolver< TSparseSpaceType,
-    TDenseSpaceType, TReordererType>
+    TDenseSpaceType, TModelPartType, TReordererType>
 {
 public:
     /**
@@ -88,13 +90,15 @@ public:
      */
     KRATOS_CLASS_POINTER_DEFINITION( MKLRepeatedPardisoSolver );
 
-    typedef LinearSolver<TSparseSpaceType, TDenseSpaceType, TReordererType> BaseType;
+    typedef LinearSolver<TSparseSpaceType, TDenseSpaceType, TModelPartType, TReordererType> BaseType;
 
     typedef typename TSparseSpaceType::MatrixType SparseMatrixType;
 
     typedef typename TSparseSpaceType::VectorType VectorType;
 
     typedef typename TDenseSpaceType::MatrixType DenseMatrixType;
+
+    typedef typename BaseType::ModelPartType ModelPartType;
 
     /**
      * @param niter number of iterative refinements allowed
@@ -106,8 +110,8 @@ public:
         mEnableOOC = false;
         mNeedData = true;
         mIsInitialized = false;
-        miparm = new MKL_INT[64];
-        mpt = new void*[64];
+        miparm.resize(64);
+        mpt.resize(64);
         mindex1_vector.resize(0);
         mindex2_vector.resize(0);
     }
@@ -119,8 +123,8 @@ public:
         mEnableOOC = false;
         mNeedData = true;
         mIsInitialized = false;
-        miparm = new MKL_INT[64];
-        mpt = new void*[64];
+        miparm.resize(64);
+        mpt.resize(64);
         mindex1_vector.resize(0);
         mindex2_vector.resize(0);
     }
@@ -128,10 +132,8 @@ public:
     /**
      * Destructor
      */
-    virtual ~MKLRepeatedPardisoSolver()
+    ~MKLRepeatedPardisoSolver() override
     {
-        delete [] miparm;
-        delete [] mpt;
         std::cout << "MKLRepeatedPardisoSolver is destroyed" << std::endl;
     }
 
@@ -156,8 +158,8 @@ public:
         SparseMatrixType& rA,
         VectorType& rX,
         VectorType& rB,
-        typename ModelPart::DofsArrayType& rdof_set,
-        ModelPart& r_model_part
+        typename ModelPartType::DofsArrayType& rdof_set,
+        ModelPartType& r_model_part
     ) final
     {
         typedef boost::numeric::bindings::traits::sparse_matrix_traits<SparseMatrixType> matraits;
@@ -255,9 +257,9 @@ public:
         /* -------------------------------------------------------------------- */
 //                 std::cout << "pardiso_solver: line 241" << std::endl;
         phase = 11;
-        PARDISO (mpt, &mmaxfct, &mmnum, &mmtype, &phase,
-                 &n, ma, &mindex1_vector[0], &mindex2_vector[0], &idum, &mnrhs,
-                 miparm, &mmsglvl, &ddum, &ddum, &merror);
+        PARDISO (mpt.data(), &mmaxfct, &mmnum, &mmtype, &phase,
+                 &n, ma, mindex1_vector.data(), mindex2_vector.data(), &idum, &mnrhs,
+                 miparm.data(), &mmsglvl, &ddum, &ddum, &merror);
 
         if (merror != 0)
         {
@@ -281,9 +283,9 @@ public:
         /* .. Numerical factorization. */
         /* -------------------------------------------------------------------- */
         phase = 22;
-        PARDISO (mpt, &mmaxfct, &mmnum, &mmtype, &phase,
-                 &n, ma, &mindex1_vector[0], &mindex2_vector[0], &idum, &mnrhs,
-                 miparm, &mmsglvl, &ddum, &ddum, &merror);
+        PARDISO (mpt.data(), &mmaxfct, &mmnum, &mmtype, &phase,
+                 &n, ma, mindex1_vector.data(), mindex2_vector.data(), &idum, &mnrhs,
+                 miparm.data(), &mmsglvl, &ddum, &ddum, &merror);
         if (merror != 0)
         {
             std::cout << "ERROR during numerical factorization: " << merror << std::endl;
@@ -322,9 +324,9 @@ public:
         MKL_INT phase = 33;
         miparm[7] = 2; /* Max numbers of iterative refinement steps. */
 
-        PARDISO (mpt, &mmaxfct, &mmnum, &mmtype, &phase,
-                 &n, ma, &mindex1_vector[0], &mindex2_vector[0], &idum, &mnrhs,
-                 miparm, &mmsglvl, b, x, &merror);
+        PARDISO (mpt.data(), &mmaxfct, &mmnum, &mmtype, &phase,
+                 &n, ma, mindex1_vector.data(), mindex2_vector.data(), &idum, &mnrhs,
+                 miparm.data(), &mmsglvl, b, x, &merror);
         if (merror != 0)
         {
             std::cout << "ERROR during solution: " << merror << std::endl;
@@ -364,9 +366,9 @@ public:
         MKL_INT phase = 33;
         miparm[7] = 2; /* Max numbers of iterative refinement steps. */
 
-        PARDISO (mpt, &mmaxfct, &mmnum, &mmtype, &phase,
-                 &n, ma, &mindex1_vector[0], &mindex2_vector[0], &idum, &mnrhs,
-                 miparm, &mmsglvl, b, x, &merror);
+        PARDISO (mpt.data(), &mmaxfct, &mmnum, &mmtype, &phase,
+                 &n, ma, mindex1_vector.data(), mindex2_vector.data(), &idum, &mnrhs,
+                 miparm.data(), &mmsglvl, b, x, &merror);
         if (merror != 0)
         {
             std::cout << "ERROR during solution: " << merror << std::endl;
@@ -393,9 +395,9 @@ public:
             MKL_INT n = mindex1_vector.size()-1;
             double ddum; /* Double dummy */
             MKL_INT idum; /* Integer dummy. */
-            PARDISO (mpt, &mmaxfct, &mmnum, &mmtype, &phase,
-                     &n, &ddum, &mindex1_vector[0], &mindex2_vector[0], &idum, &mnrhs,
-                     miparm, &mmsglvl, &ddum, &ddum, &merror);
+            PARDISO (mpt.data(), &mmaxfct, &mmnum, &mmtype, &phase,
+                     &n, &ddum, mindex1_vector.data(), mindex2_vector.data(), &idum, &mnrhs,
+                     miparm.data(), &mmsglvl, &ddum, &ddum, &merror);
 
             mindex1_vector.resize(0);
             mindex2_vector.resize(0);
@@ -457,9 +459,9 @@ private:
     /* Internal solver memory pointer pt, */
     /* 32-bit: int pt[64]; 64-bit: long int pt[64] */
     /* or void *pt[64] should be OK on both architectures */
-    void* *mpt;
+    std::vector<void*> mpt;
     /* Pardiso control parameters. */
-    MKL_INT* miparm;
+    std::vector<MKL_INT> miparm;
     MKL_INT mmaxfct, mmnum, merror, mmsglvl;
 
     void ErrorCheck(MKL_INT error)
@@ -513,33 +515,6 @@ private:
 //             MKLRepeatedPardisoSolver(const MKLRepeatedPardisoSolver& Other);
 
 }; // Class MKLRepeatedPardisoSolver
-
-
-/**
- * input stream function
- */
-template<class TSparseSpaceType, class TDenseSpaceType,class TReordererType>
-inline std::istream& operator >> (std::istream& rIStream, MKLRepeatedPardisoSolver< TSparseSpaceType,
-                                  TDenseSpaceType, TReordererType>& rThis)
-{
-    return rIStream;
-}
-
-/**
- * output stream function
- */
-template<class TSparseSpaceType, class TDenseSpaceType, class TReordererType>
-inline std::ostream& operator << (std::ostream& rOStream,
-                                  const MKLRepeatedPardisoSolver<TSparseSpaceType,
-                                  TDenseSpaceType, TReordererType>& rThis)
-{
-    rThis.PrintInfo(rOStream);
-    rOStream << std::endl;
-    rThis.PrintData(rOStream);
-
-    return rOStream;
-}
-
 
 }  // namespace Kratos.
 

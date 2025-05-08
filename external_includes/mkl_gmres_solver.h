@@ -78,9 +78,10 @@ namespace ublas = boost::numeric::ublas;
 namespace Kratos
 {
 template< class TSparseSpaceType, class TDenseSpaceType,
+          class TModelPartType,
           class TReordererType = Reorderer<TSparseSpaceType, TDenseSpaceType> >
 class MKLGMRESSolver : public DirectSolver< TSparseSpaceType,
-    TDenseSpaceType, TReordererType>
+    TDenseSpaceType, TModelPartType, TReordererType>
 {
 public:
     /**
@@ -104,7 +105,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~MKLGMRESSolver() {}
+    ~MKLGMRESSolver() override {}
 
     /**
      * Normal solve method.
@@ -114,7 +115,7 @@ public:
      * @param rX. Solution vector.
      * @param rB. Right hand side vector.
      */
-    bool Solve(SparseMatrixType& rA, VectorType& rX, VectorType& rB)
+    bool Solve(SparseMatrixType& rA, VectorType& rX, VectorType& rB) override
     {
         std::cout << "======= ENTERING GMRES SOLVER =======" << std::endl;
         double start_solver = OpenMPUtils::GetCurrentTime();
@@ -522,7 +523,7 @@ SUCCEDED:
         return true;
     }
 
-    void Error( int error_code )
+    void Error( int error_code ) const
     {
         KRATOS_THROW_ERROR( std::logic_error, "The solver has returned the ERROR code ", error_code );
     }
@@ -535,7 +536,7 @@ SUCCEDED:
      * @param rX. Solution vector.
      * @param rB. Right hand side vector.
      */
-    bool Solve(SparseMatrixType& rA, DenseMatrixType& rX, DenseMatrixType& rB)
+    bool Solve(SparseMatrixType& rA, DenseMatrixType& rX, DenseMatrixType& rB) override
     {
         KRATOS_THROW_ERROR(std::logic_error,"ERROR: This solver can be used for single RHS only", "");
         return false;
@@ -544,7 +545,7 @@ SUCCEDED:
     /**
      * Print information about this object.
      */
-    void  PrintInfo(std::ostream& rOStream) const
+    void  PrintInfo(std::ostream& rOStream) const override
     {
         rOStream << "GMRES solver finished.";
     }
@@ -552,7 +553,7 @@ SUCCEDED:
     /**
      * Print object's data.
      */
-    void  PrintData(std::ostream& rOStream) const
+    void  PrintData(std::ostream& rOStream) const override
     {
     }
 
@@ -570,35 +571,6 @@ private:
 
 }; // Class ParallelSuperLUSolver
 
-
-/**
- * input stream function
- */
-template<class TSparseSpaceType, class TDenseSpaceType,class TReordererType>
-inline std::istream& operator >> (std::istream& rIStream, MKLGMRESSolver< TSparseSpaceType,
-                                  TDenseSpaceType, TReordererType>& rThis)
-{
-    return rIStream;
-}
-
-/**
- * output stream function
- */
-template<class TSparseSpaceType, class TDenseSpaceType, class TReordererType>
-inline std::ostream& operator << (std::ostream& rOStream,
-                                  const MKLGMRESSolver<TSparseSpaceType,
-                                  TDenseSpaceType, TReordererType>& rThis)
-{
-    rThis.PrintInfo(rOStream);
-    rOStream << std::endl;
-    rThis.PrintData(rOStream);
-
-    return rOStream;
-}
-
-
 }  // namespace Kratos.
 
-#endif // KRATOS_MKL_GMRES_SOLVER_H_INCLUDED  defined 
-
-
+#endif // KRATOS_MKL_GMRES_SOLVER_H_INCLUDED  defined

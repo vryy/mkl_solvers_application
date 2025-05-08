@@ -28,10 +28,12 @@ namespace Kratos
 namespace Python
 {
 
-void  AddLinearSolversToPython();
+void AddLinearSolversToPython();
+void AddComplexLinearSolversToPython();
+void AddGComplexLinearSolversToPython();
 
 }  // namespace Python.
 
 }  // namespace Kratos.
 
-#endif // KRATOS_ADD_LINEAR_SOLVERS_TO_PYTHON_H_INCLUDED  defined 
+#endif // KRATOS_ADD_LINEAR_SOLVERS_TO_PYTHON_H_INCLUDED  defined
