@@ -268,7 +268,7 @@ public:
             exit(1);
         }
 //                 std::cout << "pardiso_solver: line 251" << std::endl;
-        std::cout << "Reordering completed ... " << std::endl;
+        std::cout << "Reordering completed ..." << std::endl;
         printf("  Number of perturbed pivots ...................... IPARM(14) : %d ~ %.2e\n", miparm[13], (double)miparm[13]);
         printf("  Peak memory symbolic factorization .............. IPARM(15) : %.2e KBs\n", (double)miparm[14]);
         printf("  Permanent memory symbolic factorization ......... IPARM(16) : %.2e KBs\n", (double)miparm[15]);
@@ -292,7 +292,7 @@ public:
             ErrorCheck(merror);
             exit(2);
         }
-        std::cout << "Factorization completed ... " << std::endl;
+        std::cout << "Factorization completed ..." << std::endl;
 
         mIsInitialized = true;
 

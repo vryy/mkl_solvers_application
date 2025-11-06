@@ -25,7 +25,7 @@ namespace Kratos
 void KratosMKLSolversApplication::Register()
 {
 
-    std::cout << "Initializing KratosMKLSolversApplication... " << std::endl;
+    std::cout << "Initializing KratosMKLSolversApplication..." << std::endl;
 
 }
 
