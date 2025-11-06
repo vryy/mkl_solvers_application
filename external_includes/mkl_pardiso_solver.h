@@ -304,7 +304,7 @@ public:
             KRATOS_ERROR << "ERROR during symbolic factorization: " << error << std::endl
                          << ErrorCheck(error);
         }
-        std::cout << "Reordering completed ... " << std::endl;
+        std::cout << "Reordering completed ..." << std::endl;
         printf("  Number of perturbed pivots ...................... IPARM(14) : %d ~ %.2e\n", iparm[13], (double)iparm[13]);
         printf("  Peak memory symbolic factorization .............. IPARM(15) : %.2e KBs\n", (double)iparm[14]);
         printf("  Permanent memory symbolic factorization ......... IPARM(16) : %.2e KBs\n", (double)iparm[15]);
@@ -326,7 +326,7 @@ public:
             KRATOS_ERROR << "ERROR during numerical factorization: " << error << std::endl
                          << ErrorCheck(error);
         }
-        std::cout << "Factorization completed ... " << std::endl;
+        std::cout << "Factorization completed ..." << std::endl;
 
         /* -------------------------------------------------------------------- */
         /* .. Back substitution and iterative refinement. */
@@ -509,7 +509,7 @@ public:
                          << ErrorCheck(error);
         }
 
-        std::cout << "Reordering completed ... " << std::endl;
+        std::cout << "Reordering completed ..." << std::endl;
         //printf("\nNumber of nonzeros in factors = %d", iparm[17]);
         //printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
         /* -------------------------------------------------------------------- */
@@ -525,7 +525,7 @@ public:
             KRATOS_ERROR << "ERROR during numerical factorization: " << error << std::endl
                          << ErrorCheck(error);
         }
-        std::cout << "Factorization completed ... " << std::endl;
+        std::cout << "Factorization completed ..." << std::endl;
 
         /* -------------------------------------------------------------------- */
         /* .. Back substitution and iterative refinement. */
