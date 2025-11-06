@@ -19,9 +19,14 @@ elseif(${USE_INTEL_GREATER_THAN_17} MATCHES TRUE)
   find_package(MKLSOLVER17 REQUIRED)
 elseif(${USE_INTEL_GREATER_THAN_24} MATCHES TRUE)
   message("***************************************************************************")
-  message("****** kratos configured for using the mkl shipped with intel >= 2017 *****")
+  message("****** kratos configured for using the mkl shipped with intel >= 2024 *****")
   message("***************************************************************************")
   find_package(MKLSOLVER24 REQUIRED)
+elseif(${USE_INTEL_NONE} MATCHES TRUE)
+  message("***************************************************************************")
+  message("************************ kratos do not use Intel MKL **********************")
+  message("***************************************************************************")
+  set(MKLSOLVER_FOUND "NO")
 else()
   message("***************************************************************************")
   message("****** kratos configured for using the mkl shipped with intel <= 11********")
@@ -30,13 +35,12 @@ else()
   find_package(MKLSOLVER REQUIRED)
 endif()
 
-include_directories(${MKLSOLVER_INCLUDE_DIR})
-link_directories(${MKLSOLVER_LIBRARIES})
-message("mkl include dir ${MKLSOLVER_INCLUDE_DIR}")
-message("mkl libs ${MKLSOLVER_LIBRARIES}")
-
-##add definitions needed
-add_definitions(-DMKL_ILP64)
+if (${MKLSOLVER_FOUND} MATCHES "YES")
+  include_directories(${MKLSOLVER_INCLUDE_DIR})
+  link_directories(${MKLSOLVER_LIBRARIES})
+  message("mkl include dir ${MKLSOLVER_INCLUDE_DIR}")
+  message("mkl libs ${MKLSOLVER_LIBRARIES}")
+endif()
 
 ## generate variables with the sources
 set( KRATOS_MKL_SOLVERS_APPLICATION_SOURCES
@@ -47,6 +51,11 @@ set( KRATOS_MKL_SOLVERS_APPLICATION_SOURCES
 
 # ###############################################################
 add_library(KratosMKLSolversApplication SHARED ${KRATOS_MKL_SOLVERS_APPLICATION_SOURCES})
+
+if (${MKLSOLVER_FOUND} MATCHES "YES")
+  ##add definitions needed
+  target_compile_definitions(KratosMKLSolversApplication PRIVATE MKL_ILP64)
+endif()
 
 add_library(KratosMKLSolversApplicationDependencies INTERFACE)
 target_link_libraries(KratosMKLSolversApplicationDependencies INTERFACE ${MKLSOLVER_LIBRARIES})

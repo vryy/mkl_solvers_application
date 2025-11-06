@@ -15,7 +15,6 @@
 
 // Project includes
 #include "includes/define.h"
-#include "python/add_equation_systems_to_python.h"
 #include "spaces/ublas_space.h"
 
 #ifdef _OPENMP
@@ -23,10 +22,11 @@
 #endif
 #include "linear_solvers/direct_solver.h"
 #include "linear_solvers/iterative_solver.h"
+#ifdef MKL_ILP64
 #include "external_includes/mkl_pardiso_solver.h"
-// #include "external_includes/mkl_complex_pardiso_solver.h"
 #include "external_includes/mkl_repeated_pardiso_solver.h"
 #include "external_includes/mkl_gmres_solver.h"
+#endif
 
 
 namespace Kratos
@@ -34,6 +34,8 @@ namespace Kratos
 
 namespace Python
 {
+
+#ifdef MKL_ILP64
 
 void AddLinearSolversToPython()
 {
@@ -160,6 +162,14 @@ void AddGComplexLinearSolversToPython()
            .def("SetMessageLevel", &MKLPardisoSolverType::SetMessageLevel)
            ;
 }
+
+#else // MKL_ILP64
+
+void AddLinearSolversToPython() {}
+void AddComplexLinearSolversToPython() {}
+void AddGComplexLinearSolversToPython() {}
+
+#endif
 
 }  // namespace Python.
 

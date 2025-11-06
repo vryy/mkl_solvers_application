@@ -73,7 +73,6 @@ public:
     /// Destructor.
     ~KratosMKLSolversApplication() override {}
 
-
     ///@}
     ///@name Operators
     ///@{
@@ -85,8 +84,6 @@ public:
 
     void Register() override;
 
-
-
     ///@}
     ///@name Access
     ///@{
@@ -96,6 +93,7 @@ public:
     ///@name Inquiry
     ///@{
 
+    static bool Has(const std::string& SolverName);
 
     ///@}
     ///@name Input and output
@@ -128,7 +126,6 @@ public:
         rOStream << "Conditions:" << std::endl;
         KratosComponents<Condition>().PrintData(rOStream);
     }
-
 
     ///@}
     ///@name Friends
