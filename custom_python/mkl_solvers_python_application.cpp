@@ -27,14 +27,14 @@ namespace Python
 
 using namespace boost::python;
 
-
-
 BOOST_PYTHON_MODULE(KratosMKLSolversApplication)
 {
 
     class_<KratosMKLSolversApplication,
            KratosMKLSolversApplication::Pointer,
            bases<KratosApplication>, boost::noncopyable >("KratosMKLSolversApplication")
+           .def("Has", &KratosMKLSolversApplication::Has)
+           .staticmethod("Has")
            ;
 
     AddLinearSolversToPython();
