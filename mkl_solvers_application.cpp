@@ -31,12 +31,13 @@ void KratosMKLSolversApplication::Register()
 
 bool KratosMKLSolversApplication::Has(const std::string& SolverName)
 {
-    if (SolverName == "MKLPardisoSolver")
+    if (SolverName == "MKLPardisoSolver"
+     || SolverName == "MKLRepeatedPardisoSolver"
+     || SolverName == "MKLComplexPardisoSolver"
+     || SolverName == "MKLGComplexPardisoSolver")
     {
 #ifdef MKL_ILP64
-            return true;
-#else
-            return false;
+        return true;
 #endif
     }
 
