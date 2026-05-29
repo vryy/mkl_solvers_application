@@ -35,13 +35,6 @@ else()
   find_package(MKLSOLVER REQUIRED)
 endif()
 
-if (${MKLSOLVER_FOUND} MATCHES "YES")
-  include_directories(${MKLSOLVER_INCLUDE_DIR})
-  link_directories(${MKLSOLVER_LIBRARIES})
-  message("mkl include dir ${MKLSOLVER_INCLUDE_DIR}")
-  message("mkl libs ${MKLSOLVER_LIBRARIES}")
-endif()
-
 ## generate variables with the sources
 set( KRATOS_MKL_SOLVERS_APPLICATION_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/mkl_solvers_application.cpp
@@ -52,16 +45,8 @@ set( KRATOS_MKL_SOLVERS_APPLICATION_SOURCES
 # ###############################################################
 add_library(KratosMKLSolversApplication SHARED ${KRATOS_MKL_SOLVERS_APPLICATION_SOURCES})
 
-if (${MKLSOLVER_FOUND} MATCHES "YES")
-  ##add definitions needed
-  target_compile_definitions(KratosMKLSolversApplication PRIVATE MKL_ILP64)
-endif()
-
-add_library(KratosMKLSolversApplicationDependencies INTERFACE)
-target_link_libraries(KratosMKLSolversApplicationDependencies INTERFACE ${MKLSOLVER_LIBRARIES})
-
-target_link_libraries(KratosMKLSolversApplication PRIVATE KratosCore )
-target_link_libraries(KratosMKLSolversApplication PUBLIC KratosMKLSolversApplicationDependencies )
+target_link_libraries(KratosMKLSolversApplication PRIVATE KratosCore)
+target_link_libraries(KratosMKLSolversApplication PUBLIC MKLSOLVER::lib)
 
 target_include_directories(KratosMKLSolversApplication PRIVATE ${MKL_SOLVERS_APPLICATION_INCLUDE_DIRS})
 
