@@ -305,14 +305,14 @@ public:
                          << ErrorCheck(error);
         }
         std::cout << "Reordering completed ..." << std::endl;
-        printf("  Number of perturbed pivots ...................... IPARM(14) : %d ~ %.2e\n", iparm[13], (double)iparm[13]);
+        printf("  Number of perturbed pivots ...................... IPARM(14) : %.2e\n", (double)iparm[13]);
         printf("  Peak memory symbolic factorization .............. IPARM(15) : %.2e KBs\n", (double)iparm[14]);
         printf("  Permanent memory symbolic factorization ......... IPARM(16) : %.2e KBs\n", (double)iparm[15]);
         printf("  Memory numerical factorization and solution ..... IPARM(17) : %.2e KBs\n", (double)iparm[16]);
         printf("  Number nonzeros in factors ...................... IPARM(18) : %.2e\n", (double)iparm[17]);
         printf("  MFlops of factorization ......................... IPARM(19) : %.2e\n", (double)iparm[18]);
         if(mEnableOOC)
-            printf("\n  Size of the minimum OOC memory for numerical factorization and solution (IPARM(63)) = %d KBs", iparm[62]);
+            printf("\n  Size of the minimum OOC memory for numerical factorization and solution (IPARM(63)) = %.2e KBs", (double)iparm[62]);
 
         /* -------------------------------------------------------------------- */
         /* .. Numerical factorization. */
