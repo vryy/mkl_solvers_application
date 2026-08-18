@@ -68,7 +68,7 @@ public:
     ///@{
 
     /// Default constructor.
-    KratosMKLSolversApplication() {}
+    KratosMKLSolversApplication();
 
     /// Destructor.
     ~KratosMKLSolversApplication() override {}
@@ -176,9 +176,6 @@ private:
     ///@{
 
 
-
-    //       static const ApplicationCondition  msApplicationCondition;
-
     ///@}
     ///@name Member Variables
     ///@{
@@ -213,7 +210,6 @@ private:
 
     /// Copy constructor.
     KratosMKLSolversApplication(KratosMKLSolversApplication const& rOther);
-
 
     ///@}
 

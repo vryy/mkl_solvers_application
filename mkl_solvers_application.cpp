@@ -22,6 +22,10 @@
 namespace Kratos
 {
 
+KratosMKLSolversApplication::KratosMKLSolversApplication()
+    : KratosApplication("MKLSolversApplication")
+{}
+
 void KratosMKLSolversApplication::Register()
 {
 
@@ -45,5 +49,3 @@ bool KratosMKLSolversApplication::Has(const std::string& SolverName)
 }
 
 }  // namespace Kratos.
-
-
