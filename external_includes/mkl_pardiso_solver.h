@@ -66,10 +66,10 @@
 #include <boost/numeric/bindings/traits/ublas_sparse.hpp>
 #include <boost/numeric/bindings/traits/ublas_vector.hpp>
 
-#include "includes/define.h"
 #include "includes/ublas_interface.h"
 #include "linear_solvers/direct_solver.h"
 #include "utilities/openmp_utils.h"
+#include "utilities/logger.h"
 
 namespace ublas = boost::numeric::ublas;
 
@@ -138,7 +138,8 @@ public:
     {
         mEnableOOC = OOC;
         if(mEnableOOC)
-            std::cout << "MKL Out-of-core is enable, adjusting MKL_PARDISO_OOC_MAX_CORE_SIZE to allocate memory for the internal array" << std::endl;
+            KRATOS_INFO("MKLPardisoSolver") << "MKL Out-of-core is enable"
+                << ", adjusting MKL_PARDISO_OOC_MAX_CORE_SIZE to allocate memory for the internal array" << std::endl;
     }
 
     void SetNumThreads(int num_threads)
@@ -205,9 +206,9 @@ public:
          */
         std::vector<MKL_INT> index1_vector(rA.index1_data().size());
         std::vector<MKL_INT> index2_vector(rA.index2_data().size());
-        std::cout << "Size of the problem: " << n << std::endl;
-        std::cout << "Size of index1_vector: " << rA.index1_data().size() << std::endl;
-        std::cout << "Size of index2_vector: " << rA.index2_data().size() << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "Size of the problem: " << n << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "Size of index1_vector: " << rA.index1_data().size() << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "Size of index2_vector: " << rA.index2_data().size() << std::endl;
         for(unsigned int i = 0; i < rA.index1_data().size(); i++ )
             index1_vector[i] = (MKL_INT)(rA.index1_data()[i])+1;
         for(unsigned int i = 0; i < rA.index2_data().size(); i++ )
@@ -255,7 +256,7 @@ public:
         /* Numbers of processors, value of OMP_NUM_THREADS */
 //        iparm[2] = OpenMPUtils::GetNumThreads(); //omp_get_max_threads();
         iparm[2] = OpenMPUtils::GetNumThreads(); //omp_get_num_procs();
-        std::cout << "Number of threads/procs (for MKL): " << iparm[2] << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "Number of threads/procs (for MKL): " << iparm[2] << std::endl;
         if( mRefinements > 0 )
             iparm[3] = 1; /* iterative-direct algorithm */
         else
@@ -304,15 +305,15 @@ public:
             KRATOS_ERROR << "ERROR during symbolic factorization: " << error << std::endl
                          << ErrorCheck(error);
         }
-        std::cout << "Reordering completed ..." << std::endl;
-        printf("  Number of perturbed pivots ...................... IPARM(14) : %.2e\n", (double)iparm[13]);
-        printf("  Peak memory symbolic factorization .............. IPARM(15) : %.2e KBs\n", (double)iparm[14]);
-        printf("  Permanent memory symbolic factorization ......... IPARM(16) : %.2e KBs\n", (double)iparm[15]);
-        printf("  Memory numerical factorization and solution ..... IPARM(17) : %.2e KBs\n", (double)iparm[16]);
-        printf("  Number nonzeros in factors ...................... IPARM(18) : %.2e\n", (double)iparm[17]);
-        printf("  MFlops of factorization ......................... IPARM(19) : %.2e\n", (double)iparm[18]);
+        KRATOS_INFO("MKLPardisoSolver") << "Reordering completed ..." << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << std::format("  Number of perturbed pivots ...................... IPARM(14) : {:.2e}\n", (double)iparm[13]);
+        KRATOS_INFO("MKLPardisoSolver") << std::format("  Peak memory symbolic factorization .............. IPARM(15) : {:.2e} KBs\n", (double)iparm[14]);
+        KRATOS_INFO("MKLPardisoSolver") << std::format("  Permanent memory symbolic factorization ......... IPARM(16) : {:.2e} KBs\n", (double)iparm[15]);
+        KRATOS_INFO("MKLPardisoSolver") << std::format("  Memory numerical factorization and solution ..... IPARM(17) : {:.2e} KBs\n", (double)iparm[16]);
+        KRATOS_INFO("MKLPardisoSolver") << std::format("  Number nonzeros in factors ...................... IPARM(18) : {:.2e}\n", (double)iparm[17]);
+        KRATOS_INFO("MKLPardisoSolver") << std::format("  MFlops of factorization ......................... IPARM(19) : {:.2e}\n", (double)iparm[18]);
         if(mEnableOOC)
-            printf("\n  Size of the minimum OOC memory for numerical factorization and solution (IPARM(63)) = %.2e KBs", (double)iparm[62]);
+            KRATOS_INFO("MKLPardisoSolver") << std::format("\n  Size of the minimum OOC memory for numerical factorization and solution (IPARM(63)) = {:.2e} KBs", (double)iparm[62]);
 
         /* -------------------------------------------------------------------- */
         /* .. Numerical factorization. */
@@ -326,7 +327,7 @@ public:
             KRATOS_ERROR << "ERROR during numerical factorization: " << error << std::endl
                          << ErrorCheck(error);
         }
-        std::cout << "Factorization completed ..." << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "Factorization completed ..." << std::endl;
 
         /* -------------------------------------------------------------------- */
         /* .. Back substitution and iterative refinement. */
@@ -358,7 +359,7 @@ public:
         if (mNumThreads > 0)
             OpenMPUtils::SetNumThreads(old_num_threads);
 
-        std::cout << "#### SOLVER TIME: " << OpenMPUtils::GetCurrentTime()-start_solver << " ####" << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "#### SOLVER TIME: " << OpenMPUtils::GetCurrentTime()-start_solver << " ####" << std::endl;
         return true;
     }
 
@@ -397,9 +398,9 @@ public:
          */
         std::vector<MKL_INT> index1_vector(rA.index1_data().size());
         std::vector<MKL_INT> index2_vector(rA.index2_data().size());
-        std::cout << "Size of the problem: " << n << std::endl;
-        std::cout << "Size of index1_vector: " << rA.index1_data().size() << std::endl;
-        std::cout << "Size of index2_vector: " << rA.index2_data().size() << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "Size of the problem: " << n << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "Size of index1_vector: " << rA.index1_data().size() << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "Size of index2_vector: " << rA.index2_data().size() << std::endl;
         for(unsigned int i = 0; i < rA.index1_data().size(); i++ )
             index1_vector[i] = (MKL_INT)(rA.index1_data()[i])+1;
         for(unsigned int i = 0; i < rA.index2_data().size(); i++ )
@@ -458,7 +459,7 @@ public:
         /* Numbers of processors, value of OMP_NUM_THREADS */
         iparm[2] = OpenMPUtils::GetNumThreads(); //omp_get_max_threads();
 //        iparm[2] = OpenMPUtils::GetNumProcs(); //omp_get_num_procs();
-        std::cout << "Number of threads/procs (for MKL): " << iparm[2] << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "Number of threads/procs (for MKL): " << iparm[2] << std::endl;
         if( mRefinements > 0 )
             iparm[3] = 1; /* iterative-direct algorithm */
         else
@@ -509,7 +510,7 @@ public:
                          << ErrorCheck(error);
         }
 
-        std::cout << "Reordering completed ..." << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "Reordering completed ..." << std::endl;
         //printf("\nNumber of nonzeros in factors = %d", iparm[17]);
         //printf("\nNumber of factorization MFLOPS = %d", iparm[18]);
         /* -------------------------------------------------------------------- */
@@ -525,7 +526,7 @@ public:
             KRATOS_ERROR << "ERROR during numerical factorization: " << error << std::endl
                          << ErrorCheck(error);
         }
-        std::cout << "Factorization completed ..." << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "Factorization completed ..." << std::endl;
 
         /* -------------------------------------------------------------------- */
         /* .. Back substitution and iterative refinement. */
@@ -565,7 +566,7 @@ public:
 
         noalias(rX) = trans(Xt);
 
-        std::cout << "#### SOLVER TIME: " << OpenMPUtils::GetCurrentTime()-start_solver << " ####" << std::endl;
+        KRATOS_INFO("MKLPardisoSolver") << "#### SOLVER TIME: " << OpenMPUtils::GetCurrentTime()-start_solver << " ####" << std::endl;
         return true;
     }
 
@@ -637,18 +638,18 @@ private:
 
     void PrintVersion() const
     {
-        printf("================================================================\n");
         MKLVersion Version;
         mkl_get_version(&Version);
-        printf("%s is created, MKL Version info:\n", Info().c_str());
-        printf("-- Major version:           %d\n", Version.MajorVersion);
-        printf("-- Minor version:           %d\n", Version.MinorVersion);
-        printf("-- Update version:          %d\n", Version.UpdateVersion);
-        printf("-- Product status:          %s\n", Version.ProductStatus);
-        printf("-- Build:                   %s\n", Version.Build);
-        printf("-- Platform:                %s\n", Version.Platform);
-        printf("-- Processor optimization:  %s\n", Version.Processor);
-        printf("================================================================\n");
+        KRATOS_INFO("") << "================================================================" << std::endl
+                << Info() << " is created, MKL Version info:" << std::endl
+                << "-- Major version:           " << Version.MajorVersion << std::endl
+                << "-- Minor version:           " << Version.MinorVersion << std::endl
+                << "-- Update version:          " << Version.UpdateVersion << std::endl
+                << "-- Product status:          " << Version.ProductStatus << std::endl
+                << "-- Build:                   " << Version.Build << std::endl
+                << "-- Platform:                " << Version.Platform << std::endl
+                << "-- Processor optimization:  " << Version.Processor << std::endl
+                << "================================================================" << std::endl;
     }
 
     /**
@@ -659,7 +660,7 @@ private:
     /**
      * Copy constructor.
      */
-//             MKLPardisoSolver(const MKLPardisoSolver& Other);
+    // MKLPardisoSolver(const MKLPardisoSolver& Other);
 
 }; // Class MKLPardisoSolver
 
